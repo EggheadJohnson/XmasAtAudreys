@@ -1,0 +1,17 @@
+{
+  "name": "xmas-at-audreys",
+  "version": "0.0.1",
+  "description": "a family site for secret santa",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "http-server ./ -a 0.0.0.0 -p 8000 -c-1"
+  },
+  "author": "Paul",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "mongodb": "^2.2.11"
+  }
+}

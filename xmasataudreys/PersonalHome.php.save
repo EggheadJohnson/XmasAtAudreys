@@ -1,0 +1,22 @@
+<?php 
+
+session_start();
+include("database.php");
+include("SantaMaker.php");
+global $conn;
+$uname = $_SESSION['username'];
+$q = "select RealName from users where username='$uname';";
+$RN = mysql_query($q,$conn);
+$row = mysql_fetch_row($RN);
+echo $row[0];
+$q = "select wishlist from users where username='$uname'";
+$WL = mysql_query($q, $conn);
+$WLRow = mysql_fetch_row($WL);
+$q = "select Receiver from giveceivers where Giver='$row[0]'";
+$receiver = mysql_query($q, $conn);
+$receiverRow = mysql_fetch_row($receiver);
+echo $WLRow[0];
+
+
+
+?>
