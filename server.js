@@ -79,13 +79,13 @@ var app = express()
 					date = date.getTime();
 					var sessionToken = helpers.hash(req.body.username+date);
 					db.collection('sessions').insertOne({userId: docs[0]._id, token: sessionToken}, function(err, r){
-						logger(db, res, req.resObj, 200, {token: sessionToken});
+						logger(db, res, req.resObj, 200, {token: sessionToken, userId: docs[0]._id});
 					})
 				}
 			})
 		})
 		.post('/users', function(req, res, next){
-			var okKeys = ['firstName', 'lastName', 'email', 'password', 'wishlist'];
+			var okKeys = ['firstName', 'lastName', 'email', 'password', 'wishlist', 'username'];
 			if (!req.body.email || !req.body.username || !req.body.password) logger(db, res, req.resObj, 400, {err: "Missing username, email, or password"})
 			else {
 				db.collection('users').find({
@@ -104,6 +104,7 @@ var app = express()
 							else {
 								var date = new Date();
 								date = date.getTime();
+								console.log(req.body.username, date, req.body.username+date);
 								var sessionToken = helpers.hash(req.body.username+date);
 								db.collection('sessions').insertOne({userId: doc.insertedId, token: sessionToken}, function(err, r){
 									if (err) {
@@ -134,20 +135,30 @@ var app = express()
 			// })
 		})
 		.get('/users', function(req, res, next){
+			console.log('gettnig users', req.userId);
 			// MongoClient.connect('mongodb://localhost:27017/xmasAtAudreys', function(err, db) {
 				db.collection('users').find().toArray(function(err, docs){
 					// db.close();
 					if (err) {
 						logger(db, res, req.resObj, 401, {err: err});
 					}
-					else logger(db, res, req.resObj, 200, {users: docs});
+					else {
+						docs.forEach(function(doc){
+							delete doc.password;
+							if (!req.userId.equals(doc._id)) delete doc.recipient;
+						})
+						logger(db, res, req.resObj, 200, {users: docs});
+					}
 				});
 			// });
 		})
 		.get('/users/:userId',function(req, res, next){
 			db.collection('users').findOne({_id: ObjectId(req.params.userId)}, function(err, doc){
 				if (err) logger(db, res, req.resObj, 401, {err: err});
-				else logger(db, res, req.resObj, 200, {user: doc});
+				else {
+					delete doc.password;
+					logger(db, res, req.resObj, 200, {user: doc});
+				}
 			})
 		})
 		.put('/users/:userId', function(req, res, next){
@@ -157,17 +168,19 @@ var app = express()
 			updates.updatedAt = new Date();
 
 			if (updates.username) logger(db, res, req.resObj, 403, {err: "Cannot update username"});
-			if (acceptedEmails.indexOf(updates.email.toLowerCase()) < 0) logger(db, res, req.resObj, 403, {err: "Email not on approved list"});
-			Object.keys(updates).forEach(function(k){
-				if (okKeys.indexOf(k) < 0) delete updates[k];
-			});
+			else if (acceptedEmails.indexOf(updates.email.toLowerCase()) < 0) logger(db, res, req.resObj, 403, {err: "Email not on approved list"});
+			else {
+				Object.keys(updates).forEach(function(k){
+					if (okKeys.indexOf(k) < 0) delete updates[k];
+				});
 
-			db.collection('users').update({_id: _id}, updates, function(err, r){
-				if (err) {
-					logger(db, res, req.resObj, 401, {err: err});
-				}
-				else logger(db, res, req.resObj, 201, {ok: true});
-			})
+				db.collection('users').update({_id: _id}, updates, function(err, r){
+					if (err) {
+						logger(db, res, req.resObj, 401, {err: err});
+					}
+					else logger(db, res, req.resObj, 201, {ok: true});
+				})
+			}
 		});
 
 
