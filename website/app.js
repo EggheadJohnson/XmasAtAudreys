@@ -57,8 +57,14 @@ xmasAtAudreys.controller('xaaSignUpCtl', ['$scope','$state', '$stateParams', '$r
 		console.log(user);
 		xmasAtAudreysSvc.signup(user)
 			.then(function(response){
-				if (response.token) console.log(token);
+				if (response.token) {
+					loggedIn = true;
+					$state.go('core.home');
+					console.log(token);}
 			});
+	}
+	$scope.resetUser = function(){
+		$scope.user = {};
 	}
 }]);
 
