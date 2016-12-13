@@ -14,22 +14,52 @@ xmasAtAudreys.controller('xaaCtl', ['$scope','$state', function($scope, $state) 
 	if (!loggedIn && $state.current.url !== '/login') $state.go('login');
 }]);
 
-xmasAtAudreys.controller('xaaLoginCtl', ['$scope','$state', 'xmasAtAudreysSvc', function($scope, $state, xmasAtAudreysSvc) {
+xmasAtAudreys.controller('xaaLoginCtl', ['$scope','$state', '$rootScope', 'xmasAtAudreysSvc', function($scope, $state, $rootScope, xmasAtAudreysSvc) {
 	console.log('xaaLoginCtl');
-	setTimeout(function(){
-		console.log("attempting login");
-		xmasAtAudreysSvc.login({username: "SantosLHalper", password: "password"})
+
+	$scope.loginButton = function(user){
+		console.log(user);
+		xmasAtAudreysSvc.login(user)
 			.then(function(resp){
-				loggedIn = true;
-				console.log(token, resp.token);
-				$state.go('core.home');
+				console.log(resp);
+				if (resp.token) {
+					loggedIn = true;
+					$state.go('core.home');
+				}
 			});
-	}, 3000);
+	}
+	$scope.signupButton = function(user){
+		console.log(user);
+		$rootScope.user = user;
+		$state.go('signup');
+	}
+	// setTimeout(function(){
+	// 	console.log("attempting login");
+	// 	xmasAtAudreysSvc.login({username: "SantosLHalper", password: "password"})
+	// 		.then(function(resp){
+	// 			loggedIn = true;
+	// 			console.log(token, resp.token);
+	// 			$state.go('core.home');
+	// 		});
+	// }, 3000);
 
 }]);
 
 xmasAtAudreys.controller('xaaHomeAboutMeCtl', ['$scope','$state', function($scope, $state) {
 	console.log('xaaHomeAboutMeCtl');
+}]);
+
+xmasAtAudreys.controller('xaaSignUpCtl', ['$scope','$state', '$stateParams', '$rootScope', 'xmasAtAudreysSvc', function($scope, $state, $stateParams, $rootScope, xmasAtAudreysSvc) {
+	console.log('xaaSignUpCtl');
+	console.log($rootScope.user);
+	$scope.user = $rootScope.user;
+	$scope.submitNewUser = function(user){
+		console.log(user);
+		xmasAtAudreysSvc.signup(user)
+			.then(function(response){
+				if (response.token) console.log(token);
+			});
+	}
 }]);
 
 xmasAtAudreys.controller('xaaSantasCtl', ['$scope','$state','xmasAtAudreysSvc', function($scope, $state, xmasAtAudreysSvc) {
@@ -125,6 +155,18 @@ xmasAtAudreys.config(['$routeProvider', '$stateProvider', '$urlRouterProvider', 
 				}
 			}
 		})
+		.state('signup', {
+			url: '/signup',
+			views: {
+				'topOfPageStuff': {
+
+				},
+				'@': {
+					templateUrl: 'views/signup.html',
+					controller: 'xaaSignUpCtl'
+				}
+			}
+		})
 		.state('core.home', {
 			url: '/home',
 			views: {
@@ -196,11 +238,14 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		users,
 		yourGiftGetter,
 		userSource,
+		loginSource,
+		signupSource,
 		// async` functions
 		getMe,
 		getUsers,
 		getOneUser,
 		login,
+		signup,
 		// sync functions
 		fetchUsers,
 		fetchOneUser;
@@ -231,6 +276,14 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		loginSource = apiUrl + '/login';
 		loginSource = $resource(loginSource);
 		return loginSource.save(loginObj, function(response){
+			token = response.token;
+		}).$promise;
+	}
+
+	signup = function(user) {
+		signupSource = apiUrl + '/users';
+		signupSource = $resource(signupSource);
+		return signupSource.save(user, function(response){
 			token = response.token;
 		}).$promise;
 	}
@@ -332,7 +385,8 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 	return {
 		getUsers: getUsers,
 		fetchUsers: fetchUsers,
-		login: login
+		login: login,
+		signup: signup
 	}
 
 

@@ -1,1 +1,23 @@
-paul
+<div>
+    <h1> Welcome to some kind of Secret Santa thing! </h1>
+</div>
+    <form method="post">
+        <div>
+            <label for="username"> Username: </label>
+            <input type="text" id="name" name="username" value="Whatever they put on the last screen" ng-model="user.username"/>
+        </div>
+        <div>
+            <label for="password"> Password: </label>
+            <input type="password" id="password" name="password" value="whatever they put on the last screen" ng-model="user.password" />
+        </div>
+        <span>
+            <button type="submit" ng-click="loginButton(user)"> Login </button>
+        </span>
+        <span>
+            <button type="submit" ng-click="signupButton(user)"> Sign up </button>
+        </span>
+    </form>
+</div>
+<div>
+    <a href="#"> Forgot my password </a>
+</div>
