@@ -1,0 +1,31 @@
+<div>
+    <form method="post">
+        <div>
+            <label for="username"> Username: </label>
+            <input type="text" id="name" name="username" ng-model="user.username"/>
+        </div>
+        <div>
+            <label for="password"> Password: </label>
+            <input type="password" id="password" name="password" ng-model="user.password" />
+        </div>
+        <div>
+            <label for="firstname"> First name: </label>
+            <input id="firstname" name="firstname" type="text" ng-model="user.firstname"></input>
+        </div>
+        <div>
+            <label for="lastname"> Last name: </label>
+            <input id="lastname" name="lastname" type="text" ng-model="user.lastname"/>
+        </div>
+        <div>
+            <label for="email"> Email address: </label>
+            <input id="email" name="email" type="text" ng-model="user.email" />
+        </div>
+        <span class="button">
+            <button type="submit" ng-click="submitNewUser(user)"> Submit! </button>
+        </span>
+        <span class="button" ng-click="resetUser()">
+            <button> Reset form </button>
+        </span>
+    </form>
+
+</div>
