@@ -1,0 +1,18 @@
+<div>
+    <form method="post">
+        <div>
+            <label for="username"> id: </label>
+            <input type="text" id="name" ng-model="_id" />
+        </div>
+        <div>
+            <label for="password"> temptoken: </label>
+            <input type="password" id="password" ng-model="temptoken" />
+        </div>
+        <span>
+            <button ng-click="signin(_id, temptoken)"> Login </button>
+        </span>
+    </form>
+</div>
+<div>
+    <h1> GIVE SHIT TO {{recipient}} </h1>
+</div>
