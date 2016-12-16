@@ -119,6 +119,32 @@ var app = express()
 				})
 			}
 		})
+		.post('/theOneRoute/:userId', function(req, res, next){
+			var retObj;
+			console.log(req.params, req.body);
+			db.collection('users').findOne({_id: ObjectId(req.params.userId)}, function(err, doc){
+				// console.log(doc);
+				if (!doc) logger(db, res, req.resObj, 404, {err: "not found"});
+				else if (doc.tempToken !== req.body.tempToken) logger(db, res, req.resObj, 400, {err: "missing or incorrect token"});
+				else {
+					console.log(doc);
+					retObj = {
+						userId: doc._id,
+						firstname: doc.firstName,
+						lastname: doc.lastName,
+						recipientId: doc.recipientId
+					}
+					db.collection('users').findOne({_id: retObj.recipientId}, function(err, recdoc){
+						console.log(recdoc);
+						console.log(retObj);
+						retObj.recipientFirstname = recdoc.firstName;
+						retObj.recipientLastname = recdoc.lastName;
+						logger(db, res, req.resObj, 200, {data: retObj});
+					})
+				}
+
+			})
+		})
 		.use('/*', function(req, res, next){
 			// MongoClient.connect('mongodb://localhost:27017/xmasAtAudreys', function(err, db){
 				db.collection('sessions').findOne({token: req.headers.token},function(err, doc){
@@ -145,7 +171,11 @@ var app = express()
 					else {
 						docs.forEach(function(doc){
 							delete doc.password;
-							if (!req.userId.equals(doc._id)) delete doc.recipient;
+							if (!req.userId.equals(doc._id)) {
+								delete doc.recipient;
+								doc.currentUser = false;
+							}
+							else doc.currentUser = true;
 						})
 						logger(db, res, req.resObj, 200, {users: docs});
 					}
@@ -157,6 +187,7 @@ var app = express()
 				if (err) logger(db, res, req.resObj, 401, {err: err});
 				else {
 					delete doc.password;
+					if (!req.userId.equals(doc._id)) delete doc.recipient;
 					logger(db, res, req.resObj, 200, {user: doc});
 				}
 			})
@@ -181,6 +212,14 @@ var app = express()
 					else logger(db, res, req.resObj, 201, {ok: true});
 				})
 			}
+		})
+		.get('/sessions/:sessionId/user', function(req, res, next){
+			// var _id = ObjectId(req.params.sessionId);
+			db.collection('sessions').findOne({token: req.params.sessionId}, function(err, doc){
+				db.collection('users').findOne({_id: doc._id}, function(err, userDoc){
+					logger(db, res, req.resObj, 200, {user: userDoc});
+				})
+			})
 		});
 
 

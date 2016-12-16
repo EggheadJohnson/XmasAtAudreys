@@ -24,7 +24,13 @@ xmasAtAudreys.controller('xaaLoginCtl', ['$scope','$state', '$rootScope', 'xmasA
 				console.log(resp);
 				if (resp.token) {
 					loggedIn = true;
-					$state.go('core.home');
+					console.log("fetching users");
+					xmasAtAudreysSvc.getUsers(token).then(function(response){
+						users = xmasAtAudreysSvc.fetchUsers();
+						console.log(users);
+						$state.go('core.home');
+					});
+
 				}
 			});
 	}
@@ -45,8 +51,17 @@ xmasAtAudreys.controller('xaaLoginCtl', ['$scope','$state', '$rootScope', 'xmasA
 
 }]);
 
-xmasAtAudreys.controller('xaaHomeAboutMeCtl', ['$scope','$state', function($scope, $state) {
+xmasAtAudreys.controller('xaaHomeAboutMeCtl', ['$scope','$state', 'xmasAtAudreysSvc', function($scope, $state, xmasAtAudreysSvc) {
 	console.log('xaaHomeAboutMeCtl');
+	$scope.user = xmasAtAudreysSvc.fetchMe();
+	console.log($scope.user);
+	$scope.saveUser = function(user){
+		console.log(user);
+		xmasAtAudreysSvc.update(user)
+			.then(function(response){
+				console.log(response);
+			})
+	}
 }]);
 
 xmasAtAudreys.controller('xaaSignUpCtl', ['$scope','$state', '$stateParams', '$rootScope', 'xmasAtAudreysSvc', function($scope, $state, $stateParams, $rootScope, xmasAtAudreysSvc) {
@@ -73,11 +88,7 @@ xmasAtAudreys.controller('xaaSantasCtl', ['$scope','$state','xmasAtAudreysSvc', 
 	var users;
 
 
-	console.log("fetching users");
-	xmasAtAudreysSvc.getUsers(token).then(function(response){
-		users = xmasAtAudreysSvc.fetchUsers();
-		console.log(users);
-	});
+
 }]);
 
 xmasAtAudreys.controller('xaaYourGiftGetterCtl', ['$scope','$state', function($scope, $state) {
@@ -243,16 +254,16 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 	var apiUrl = 'http://localhost:3000',
 		users,
 		yourGiftGetter,
-		userSource,
-		loginSource,
-		signupSource,
+		me,
+		myUserId,
 		// async` functions
-		getMe,
 		getUsers,
 		getOneUser,
 		login,
 		signup,
+		update,
 		// sync functions
+		fetchMe,
 		fetchUsers,
 		fetchOneUser;
 
@@ -267,11 +278,14 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		});
 		return userSource.get(function(response){
 			users = response.users;
+			me = users.filter(function(user) {
+				return user.currentUser;
+			})
 		}).$promise;
 	}
 
 	getOneUser = function(id){
-		userSource = apiUrl + '/users/' + id;
+		var userSource = apiUrl + '/users/' + id;
 		userSource = $resource(userSource);
 		return userSource.get(function(response){
 			yourGiftGetter = reponse.user;
@@ -279,27 +293,45 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 	}
 
 	login = function(loginObj) {
-		loginSource = apiUrl + '/login';
+		var loginSource = apiUrl + '/login';
 		loginSource = $resource(loginSource);
 		return loginSource.save(loginObj, function(response){
 			token = response.token;
+			myUserId = response.userId;
 		}).$promise;
 	}
 
 	signup = function(user) {
-		signupSource = apiUrl + '/users';
+		var signupSource = apiUrl + '/users';
 		signupSource = $resource(signupSource);
 		return signupSource.save(user, function(response){
 			token = response.token;
 		}).$promise;
 	}
-
+	update = function(user) {
+		var updateSource = apiUrl + '/users/' + user._id;
+		updateSource = $resourc(updateSource, {}, {
+			put: {
+				headers: {token: token},
+				method: 'put'
+			}
+		})
+		return updateSource.put(user, function(response){
+			console.log('done');
+		}).$promise;
+	}
+	fetchMe = function(){
+		return fetchOneUser(myUserId);
+	}
 	fetchUsers = function(){
 		return users;
 	}
 
-	fetchOneUser = function(){
-		return yourGiftGetter;
+	fetchOneUser = function(userId){
+		if (!userId) return yourGiftGetter;
+		return users.filter(function(user) {
+			return user._id === userId;
+		})
 	}
 
 
@@ -392,7 +424,9 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		getUsers: getUsers,
 		fetchUsers: fetchUsers,
 		login: login,
-		signup: signup
+		signup: signup,
+		fetchMe: fetchMe,
+		update: update
 	}
 
 
