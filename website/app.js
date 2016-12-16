@@ -11,7 +11,7 @@ var xmasAtAudreys = angular.module('xmasAtAudreys', [
 
 xmasAtAudreys.controller('xaaCtl', ['$scope','$state', function($scope, $state) {
 	console.log($state);
-	if (!loggedIn && $state.current.url !== '/login') $state.go('login');
+	// if (!loggedIn && $state.current.url !== '/login') $state.go('login');
 }]);
 
 xmasAtAudreys.controller('xaaLoginCtl', ['$scope','$state', '$rootScope', 'xmasAtAudreysSvc', function($scope, $state, $rootScope, xmasAtAudreysSvc) {
@@ -95,6 +95,19 @@ xmasAtAudreys.controller('xaaYourGiftGetterCtl', ['$scope','$state', function($s
 	console.log('xaaYourGiftGetterCtl');
 }]);
 
+xmasAtAudreys.controller('xiaLandingCtl', ['$scope','$state', '$stateParams', 'xmasAtAudreysSvc', function($scope, $state, $stateParams, xmasAtAudreysSvc) {
+	console.log('xiaLandingCtl');
+	console.log($stateParams);
+	$scope.id = "";
+	$scope.token = "";
+	$scope.signin = function(_id, token){
+		console.log(_id, token);
+		$scope.recipient = xmasAtAudreysSvc.theOneRoute(_id, token).data.recipientFirstname;
+		console.log("oooga",$scope.recipient);
+	}
+
+}]);
+
 // xmasAtAudreys.controller('xaaRightPanelCtl', ['$scope', '$stateParams', 'xmasAtAudreysSvc', function($scope, $stateParams, xmasAtAudreysSvc) {
 //
 // 	$scope.blogView = $stateParams.id !== undefined;
@@ -135,8 +148,26 @@ xmasAtAudreys.controller('xaaMiddleOfPageCtl', ['$scope', '$state', '$stateParam
 
 xmasAtAudreys.config(['$routeProvider', '$stateProvider', '$urlRouterProvider', function($routeProvider, $stateProvider, $urlRouterProvider){
 
-	$urlRouterProvider.otherwise("/login");
+	$urlRouterProvider.otherwise("/landing");
 	$stateProvider
+		.state('landing', {
+			url: '/landing',
+			views: {
+				'@': {
+					templateUrl: 'views/landing.html',
+					controller: 'xiaLandingCtl'
+				}
+			}
+		})
+		.state('getMySanta', {
+			url: '/getMySanta',
+			views: {
+				'@': {
+					templateUrl: 'views/getMySanta',
+					controller: 'xiaGetMySantaCtl'
+				}
+			}
+		})
 		.state('core', {
 			views: {
 				'@': {
@@ -262,6 +293,7 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		login,
 		signup,
 		update,
+		theOneRoute,
 		// sync functions
 		fetchMe,
 		fetchUsers,
@@ -281,6 +313,16 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 			me = users.filter(function(user) {
 				return user.currentUser;
 			})
+		}).$promise;
+	}
+
+	theOneRoute = function(id, token){
+		tORSource = apiUrl + '/theOneRoute/'+id;
+		tORSource = $resource(tORSource);
+		return tORSource.save({tempToken: token}, function(response){
+			console.log(response);
+			console.log(response.data.recipientFirstname);
+			return response.data.recipientFirstname;
 		}).$promise;
 	}
 
@@ -426,7 +468,8 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		login: login,
 		signup: signup,
 		fetchMe: fetchMe,
-		update: update
+		update: update,
+		theOneRoute
 	}
 
 
