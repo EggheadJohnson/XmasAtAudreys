@@ -292,7 +292,7 @@ xmasAtAudreys.config(['$routeProvider', '$stateProvider', '$urlRouterProvider', 
 
 xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resource, $httpProvider){
 
-	var apiUrl = 'http://localhost:3000',
+	var apiUrl = 'http://www.xmasinalameda.com:3001',
 		users,
 		yourGiftGetter,
 		me,

@@ -1,5 +1,7 @@
 var MongoClient = require('mongodb').MongoClient;
+var config = require('../server/util/config.js');
 
+var mongoURL = config.mongoURL;
 
 var participants = [
     'Amy',
@@ -56,7 +58,7 @@ function runSecretSantaGen(){
 
 var santas = runSecretSantaGen();
 // console.log(runSecretSantaGen());
-MongoClient.connect('mongodb://localhost:27017/xmasAtAudreys', function(err, db){
+MongoClient.connect(mongoURL, function(err, db){
     db.collection('users').find().toArray(function(err, docs){
         docs.forEach(function(doc){
             // console.log(doc, docs.length, santas);

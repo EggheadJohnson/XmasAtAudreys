@@ -9,24 +9,28 @@ var express = require('express'),
 	_ = require('lodash'),
 	db;
 
-MongoClient.connect('mongodb://localhost:27017/xmasAtAudreys', function(err, dbRes){
+// config
+var config = require('./util/config.js');
+var mongoURL = config.mongoURL;
+
+MongoClient.connect(mongoURL, function(err, dbRes){
 	db = dbRes;
 });
 
 process.on('exit', function(){
-	console.log("exiting");
+	// console.log("exiting");
 	db.close();
 });
 
 process.on('SIGINT', function(){
-	console.log("SIGINTing");
+	// console.log("SIGINTing");
 	// db.close();
 	process.exit();
 })
 
 
 	// db = require('./helpers/database')();
-// console.log(db);
+// // console.log(db);
 	// request = require('request'),
 	// ioredis = require('ioredis'),
 
@@ -104,7 +108,7 @@ var app = express()
 							else {
 								var date = new Date();
 								date = date.getTime();
-								console.log(req.body.username, date, req.body.username+date);
+								// console.log(req.body.username, date, req.body.username+date);
 								var sessionToken = helpers.hash(req.body.username+date);
 								db.collection('sessions').insertOne({userId: doc.insertedId, token: sessionToken}, function(err, r){
 									if (err) {
@@ -121,13 +125,13 @@ var app = express()
 		})
 		.post('/theOneRoute/:userId', function(req, res, next){
 			var retObj;
-			console.log(req.params, req.body);
+			// console.log(req.params, req.body);
 			db.collection('users').findOne({_id: ObjectId(req.params.userId)}, function(err, doc){
-				// console.log(doc);
+				// // console.log(doc);
 				if (!doc) logger(db, res, req.resObj, 404, {err: "not found"});
 				else if (doc.tempToken !== req.body.tempToken) logger(db, res, req.resObj, 400, {err: "missing or incorrect token"});
 				else {
-					console.log(doc);
+					// console.log(doc);
 					retObj = {
 						userId: doc._id,
 						firstname: doc.firstName,
@@ -135,8 +139,8 @@ var app = express()
 						recipientId: doc.recipientId
 					}
 					db.collection('users').findOne({_id: retObj.recipientId}, function(err, recdoc){
-						console.log(recdoc);
-						console.log(retObj);
+						// console.log(recdoc);
+						// console.log(retObj);
 						retObj.recipientFirstname = recdoc.firstName;
 						retObj.recipientLastname = recdoc.lastName;
 						logger(db, res, req.resObj, 200, {data: retObj});
@@ -161,7 +165,7 @@ var app = express()
 			// })
 		})
 		.get('/users', function(req, res, next){
-			console.log('gettnig users', req.userId);
+			// console.log('gettnig users', req.userId);
 			// MongoClient.connect('mongodb://localhost:27017/xmasAtAudreys', function(err, db) {
 				db.collection('users').find().toArray(function(err, docs){
 					// db.close();
@@ -223,6 +227,6 @@ var app = express()
 		});
 
 
-app.listen(3000);
-console.log(Date());
-console.log('EE Node running on port 3000')
+app.listen(3001);
+// console.log(Date());
+// console.log('XIA Node running on port 3001');
