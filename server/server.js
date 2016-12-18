@@ -132,18 +132,30 @@ var app = express()
 				else if (doc.tempToken !== req.body.tempToken) logger(db, res, req.resObj, 400, {err: "missing or incorrect token"});
 				else {
 					// console.log(doc);
+					var date = new Date();
+					date = date.getTime();
+
+
 					retObj = {
 						userId: doc._id,
 						firstname: doc.firstName,
 						lastname: doc.lastName,
+						wishlist: doc.wishlist,
 						recipientId: doc.recipientId
 					}
 					db.collection('users').findOne({_id: retObj.recipientId}, function(err, recdoc){
 						// console.log(recdoc);
 						// console.log(retObj);
-						retObj.recipientFirstname = recdoc.firstName;
-						retObj.recipientLastname = recdoc.lastName;
-						logger(db, res, req.resObj, 200, {data: retObj});
+						var sessionToken = helpers.hash(doc.firstName+date);
+						db.collection('sessions').insertOne({userId: doc._id, token: sessionToken}, function(err, r){
+
+							retObj.recipientFirstname = recdoc.firstName;
+							retObj.recipientLastname = recdoc.lastName;
+							retObj.recipientWishlist = recdoc.wishlist;
+							retObj.sessionToken = sessionToken;
+							logger(db, res, req.resObj, 200, {data: retObj});
+						})
+
 					})
 				}
 
@@ -156,7 +168,7 @@ var app = express()
 					if (err) {
 						logger(db, res, req.resObj, 401, {err: err});
 					}
-					else if (!doc) logger(db, res, req.resObj, 400, {err: "Not Authorized"});
+					else if (!doc) logger(db, res, req.resObj, 403, {err: "Not Authorized"});
 					else {
 						req.userId = doc.userId;
 						next();
@@ -203,13 +215,13 @@ var app = express()
 			updates.updatedAt = new Date();
 
 			if (updates.username) logger(db, res, req.resObj, 403, {err: "Cannot update username"});
-			else if (acceptedEmails.indexOf(updates.email.toLowerCase()) < 0) logger(db, res, req.resObj, 403, {err: "Email not on approved list"});
+			else if (updates.email && acceptedEmails.indexOf(updates.email.toLowerCase()) < 0) logger(db, res, req.resObj, 403, {err: "Email not on approved list"});
 			else {
 				Object.keys(updates).forEach(function(k){
 					if (okKeys.indexOf(k) < 0) delete updates[k];
 				});
 
-				db.collection('users').update({_id: _id}, updates, function(err, r){
+				db.collection('users').update({_id: _id}, {$set: updates}, function(err, r){
 					if (err) {
 						logger(db, res, req.resObj, 401, {err: err});
 					}

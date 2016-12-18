@@ -22,8 +22,15 @@
                 </span>
             </form>
         </div>
-        <div>
-            <h1 ng-if="recipient"> {{firstName}}!  You get to give a present to {{recipient}}! </h1>
+        <div ng-if="recipient">
+            <h1> {{firstName}}!  You get to give a present to {{recipient}}! </h1>
+            <h2> {{recipient}} has asked for: </h2>
+            <p> {{recipientWishlist}} </p>
+            <h2> Edit your wishlist: </h2>
+            <textarea rows=6 cols=50 style="width: 100%" ng-model="wishlist" >
+
+            </textarea>
+            <button ng-click="save(wishlist)">Save wishlist!</button>
         </div>
     </div>
 </div>

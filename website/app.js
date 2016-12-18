@@ -99,21 +99,39 @@ xmasAtAudreys.controller('xaaYourGiftGetterCtl', ['$scope','$state', function($s
 xmasAtAudreys.controller('xiaLandingCtl', ['$scope','$state', '$stateParams', 'xmasAtAudreysSvc', function($scope, $state, $stateParams, xmasAtAudreysSvc) {
 	// console.log('xiaLandingCtl');
 	// console.log("xiaLandingCtl stateParams",$stateParams);
+	var sessionToken;
 	$scope.id = "";
 	$scope.token = "";
+
 	$scope.signin = function(_id, token){
 		// console.log("after sign in",_id, token);
+		$scope.id = _id;
+		$scope.token = token;
 		xmasAtAudreysSvc.theOneRoute(_id, token).then(function(data,err){
 			// console.log("data err", data, err);
 			$scope.firstName = data.data.firstname;
 			$scope.recipient = data.data.recipientFirstname;
+			$scope.recipientWishlist = data.data.recipientWishlist;
+			$scope.wishlist = data.data.wishlist || "enter your wishlist here!";
+			sessionToken = data.data.sessionToken;
 		});
 		// // console.log("oooga",$scope.recipient);
 	}
 	$scope.signout = function(){
 		$scope.firstName = null;
 		$scope.recipient = null;
+		$scope.wishlist = null;
+		$scope.recipientWishlist = null;
 		$state.reload();
+	}
+	$scope.save = function(wishlist){
+		$scope.wishlist = wishlist;
+		console.log($scope.wishlist);
+		var user = {
+			_id: $scope.id,
+			wishlist: $scope.wishlist
+		}
+		xmasAtAudreysSvc.update(user, sessionToken);
 	}
 
 }]);
@@ -292,7 +310,8 @@ xmasAtAudreys.config(['$routeProvider', '$stateProvider', '$urlRouterProvider', 
 
 xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resource, $httpProvider){
 
-	var apiUrl = 'http://www.xmasinalameda.com:3001',
+	// var apiUrl = 'http://www.xmasinalameda.com:3001',
+	var apiUrl = 'http://localhost:3001',
 		users,
 		yourGiftGetter,
 		me,
@@ -330,8 +349,10 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 		tORSource = apiUrl + '/theOneRoute/'+id;
 		tORSource = $resource(tORSource);
 		return tORSource.save({tempToken: token}, function(response){
-			// console.log(response);
+			console.log(response);
 			// console.log(response.data.recipientFirstname);
+			token = response.data.sessionToken;
+			console.log(token);
 			return response.data.recipientFirstname;
 		}).$promise;
 	}
@@ -360,11 +381,12 @@ xmasAtAudreys.factory('xmasAtAudreysSvc', ['$resource', '$http', function($resou
 			token = response.token;
 		}).$promise;
 	}
-	update = function(user) {
+	update = function(user, sessionToken) {
 		var updateSource = apiUrl + '/users/' + user._id;
-		updateSource = $resourc(updateSource, {}, {
+		console.log(updateSource, user, token);
+		updateSource = $resource(updateSource, {}, {
 			put: {
-				headers: {token: token},
+				headers: {token: sessionToken},
 				method: 'put'
 			}
 		})
